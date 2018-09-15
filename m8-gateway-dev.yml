@@ -1,0 +1,103 @@
+server:
+  port: 9999
+
+spring:
+  rabbitmq:
+    host: 39.104.103.217
+    port: 5672
+    username: wisdom
+    password: bigfamily
+  zipkin:
+    rabbitmq:
+      queue: zipkin
+  sleuth:
+    sampler:
+      percentage: 1.0
+
+hystrix:
+  command:
+    m8-upms-service:
+      execution:
+        timeout:
+          enabled: false #Edgware.RELEASE中，timeoutInMilliseconds不起作用，暂时关掉
+        isolation:
+          thread:
+            timeoutInMilliseconds: 30000 #缺省为1000
+    
+zuul:
+  ribbon:
+    ReadTimeout: 60000  
+    ConnectTimeout: 60000
+    eager-load:
+      enabled: true
+      clients: m8-auth,m8-upms-service
+  ignoredServices: '*'
+  
+  host:
+    connect-timeout-millis: 60000
+    socket-timeout-millis: 30000
+  routes:
+    m8-auth:
+      path: /auth/**
+      serviceId: m8-auth
+      stripPrefix: true
+      sensitiveHeaders:
+    m8-upms-service:
+      path: /admin/**
+      serviceId: m8-upms-service
+      stripPrefix: true
+      sensitiveHeaders:
+    m8-zipkin-elk:
+      path: /zipkin/**
+      serviceId: m8-zipkin-elk
+      stripPrefix: true
+      sensitiveHeaders:
+    hn-exhibition:
+      path: /hn/**
+      serviceId: hn-exhibition
+      stripPrefix: true
+      sensitiveHeaders:
+  ratelimit:
+    key-prefix: m8-ratelimite 
+    enabled: true 
+    repository: REDIS 
+    behind-proxy: true
+    policies:
+      m8-upms-service:
+        limit: 100
+        quota: 1000
+        refresh-interval: 3
+            
+security:
+  validate:
+    code: false
+  sessions: stateless
+  oauth2:
+    client:
+      client-id: pig
+      client-secret: pig
+    resource:
+      loadBalanced: true
+      token-info-uri: ${security.auth.server}/oauth/check-token
+      service-id: m8-gateway
+      jwt:
+         key-uri: ${security.auth.server}/oauth/token_key #解析jwt令牌所需要密钥的地址
+
+urls:
+  anon:
+    - /mobile/**
+    - /auth/**
+    - /admin/code/*
+    - /admin/smsCode/*
+    - /admin/user/info
+    - /admin/menu/userTree
+    - /swagger-resources/**
+    - /swagger-ui.html
+    - /*/v2/api-docs
+    - /swagger/api-docs
+    - /webjars/**
+    - /hn/**
+    - /admin/menu/navigation
+
+logging:
+  config: classpath:logback.xml

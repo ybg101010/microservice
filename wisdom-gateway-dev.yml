@@ -30,7 +30,7 @@ zuul:
     ConnectTimeout: 60000
     eager-load:
       enabled: true
-      clients: m8-auth,m8-upms-service
+      clients: wisdom-auth,wisdom-upms-service
   ignoredServices: '*'
   
   host:
